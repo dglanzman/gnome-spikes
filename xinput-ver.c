@@ -20,19 +20,11 @@ int main() {
     }
 
     // get the filename and path (UTF-8) to redirect xinput info to
-    GFileInfo * info =
-        g_file_query_info(tmp, G_FILE_ATTRIBUTE_STANDARD_NAME, 
-        G_FILE_QUERY_INFO_NONE, NULL, &err);
-    if (err) {
-        fprintf(stderr, "Unable to get xinput temp filename: %s\n",
-            err->message);
-        g_clear_error(&err);
-        return_code = -1;
+    char * filename = g_file_get_path(tmp);
+    if (!filename) {
+        fprintf(stderr, "Unable to get xinput temp filename\n");
         goto file_return;
     }
-    char * filename = g_file_info_get_attribute_as_string(info,
-        G_FILE_ATTRIBUTE_STANDARD_NAME);
-    g_object_unref(info);
 
     // build the xinput command string using the temp filename
     size_t buf_len = strlen("xinput --version >> ");
@@ -62,7 +54,7 @@ int main() {
     }
 
     // figure out how much output xinput produced from tmp filesize
-    info = g_file_query_info(tmp, G_FILE_ATTRIBUTE_STANDARD_SIZE, 
+    GFileInfo * info = g_file_query_info(tmp, G_FILE_ATTRIBUTE_STANDARD_SIZE, 
         G_FILE_QUERY_INFO_NONE, NULL, &err);
     if (err) {
         fprintf(stderr, "Unable to get temp file size: %s\n",
@@ -82,7 +74,8 @@ int main() {
         return_code = -1;
         goto command_buf_return;
     }
-    g_input_stream_read(stream, output_buffer, file_size, NULL, &err);
+    GInputStream * in_stream = g_io_stream_get_input_stream(G_IO_STREAM(stream));
+    g_input_stream_read(in_stream, output_buffer, file_size, NULL, &err);
     if (err) {
         fprintf(stderr, "Unable to read xinput output from tmp file: %s\n",
             err->message);
@@ -93,15 +86,20 @@ int main() {
     output_buffer[file_size] = '\0';
     
     // print the output to standard out
-    printf("The xinput results were:\n\x1b[1m%s\x1b[0m\n", output_buffer);
+    printf("\x1b[1m%s\x1b[0m", output_buffer);
 
+stream_return:
+    g_io_stream_close(G_IO_STREAM(stream), NULL, &err);
+    g_clear_error(&err);
 output_buf_return:
     free(output_buffer);
 command_buf_return:
-    g_free(filename);
     free(command_buf);
+filename_return:
+    g_free(filename);
 file_return:
     g_file_delete(tmp, NULL, &err);
     g_clear_error(&err);
+    g_free(tmp);
     return return_code;
 }
