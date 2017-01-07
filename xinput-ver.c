@@ -34,7 +34,7 @@ int main() {
     if (!command_buf) {
         fprintf(stderr, "Malloc returned NULL at " __FILE__ ":%d\n", __LINE__);
         return_code = -1;
-        goto file_return;
+        goto filename_return;
     }
     errno = 0;
     snprintf(command_buf, buf_len, "xinput --version >> %s", filename);
@@ -89,8 +89,7 @@ int main() {
     printf("\x1b[1m%s\x1b[0m", output_buffer);
 
 stream_return:
-    g_io_stream_close(G_IO_STREAM(stream), NULL, &err);
-    g_clear_error(&err);
+    g_object_unref(stream);
 output_buf_return:
     free(output_buffer);
 command_buf_return:
@@ -98,7 +97,7 @@ command_buf_return:
 filename_return:
     g_free(filename);
 file_return:
-    g_file_delete(tmp_file, NULL, &err);
-    g_clear_error(&err);
+    g_file_delete(tmp_file, NULL, NULL);
+    g_object_unref(tmp_file);
     return return_code;
 }
