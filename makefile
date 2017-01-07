@@ -1,9 +1,23 @@
-xinput-ver: xinput-ver.c
-	cc -g xinput-ver.c -o xinput-ver `pkg-config --cflags --libs gio-2.0 glib-2.0`
+.PHONY: executables clean
 
-test: test.c
-	cc -g test.c -o test `pkg-config --cflags --libs glib-2.0`
+executables: test xinput-ver
+
+xinput-ver: xinput-ver.o
+	cc -g $< -o $@ `pkg-config --libs gio-2.0 glib-2.0`
+
+test: test.o
+	cc -g $< -o $@ `pkg-config --libs glib-2.0`
+
+%.o: %.c
+	cc -c -g $< -o $@ `pkg-config --cflags gio-2.0 glib-2.0`
+
+%.s: %
+	objdump -D -S $< > $@
 
 clean:
 	rm -f xinput-ver
 	rm -f test
+	rm -f *.s
+	rm -f *.o
+
+makefile: ;
