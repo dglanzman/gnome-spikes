@@ -19,6 +19,7 @@ test: test.o
 
 clean:
 	rm -f xinput-ver
+	rm -f glib-valgrind-test
 	rm -f test
 	rm -f *.s
 	rm -f *.o
