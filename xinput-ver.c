@@ -11,7 +11,7 @@ int main() {
     GError * err = NULL;
 
     // create a new temporary file to record output from xinput
-    GFile * tmp = g_file_new_tmp(NULL, &stream, &err);
+    GFile * tmp_file = g_file_new_tmp(NULL, &stream, &err);
     if (err) {
         fprintf(stderr, "Unable to create temp file for communication with "
             "xinput: %s\n", err->message);
@@ -20,7 +20,7 @@ int main() {
     }
 
     // get the filename and path (UTF-8) to redirect xinput info to
-    char * filename = g_file_get_path(tmp);
+    char * filename = g_file_get_path(tmp_file);
     if (!filename) {
         fprintf(stderr, "Unable to get xinput temp filename\n");
         goto file_return;
@@ -53,8 +53,8 @@ int main() {
         goto command_buf_return;
     }
 
-    // figure out how much output xinput produced from tmp filesize
-    GFileInfo * info = g_file_query_info(tmp, G_FILE_ATTRIBUTE_STANDARD_SIZE, 
+    // figure out how much output xinput produced from tmp_file filesize
+    GFileInfo * info = g_file_query_info(tmp_file, G_FILE_ATTRIBUTE_STANDARD_SIZE, 
         G_FILE_QUERY_INFO_NONE, NULL, &err);
     if (err) {
         fprintf(stderr, "Unable to get temp file size: %s\n",
@@ -98,8 +98,7 @@ command_buf_return:
 filename_return:
     g_free(filename);
 file_return:
-    g_file_delete(tmp, NULL, &err);
+    g_file_delete(tmp_file, NULL, &err);
     g_clear_error(&err);
-    g_free(tmp);
     return return_code;
 }
