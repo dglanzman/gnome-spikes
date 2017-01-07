@@ -1,6 +1,6 @@
 .PHONY: executables clean
 
-executables: test xinput-ver
+executables: test xinput-ver glib-valgrind-test
 
 xinput-ver: xinput-ver.o
 	cc -g $< -o $@ `pkg-config --libs gio-2.0 glib-2.0`
